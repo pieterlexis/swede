@@ -4,8 +4,8 @@ Swede aims to provide a one-stop solutions to create and test TLSA records.
 
                                                                          LICENSE
 --------------------------------------------------------------------------------
-swede is copyright Pieter Lexis <pieter@os3.nl> and is licensed under the terms
-of the GNU General Public Licence version 2 or higher.
+swede is copyright Pieter Lexis <pieter.lexis@os3.nl> and is licensed under the
+terms of the GNU General Public Licence version 2 or higher.
 
                                                                     DEPENDENCIES
 --------------------------------------------------------------------------------
