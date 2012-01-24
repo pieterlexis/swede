@@ -109,8 +109,12 @@ def getVerificationErrorReason(num):
 
 def getRecords(hostname, rrtype='A', secure=True):
 	"""Do a lookup of a name and a rrtype, returns a list of binary coded strings. Only queries for rr_class IN."""
+	global resolvconf
 	ctx = unbound.ub_ctx()
 	ctx.add_ta_file('root.key')
+	# Use the local cache
+	if resolvconf and os.path.isfile(resolvconf):
+		ctx.resolvconf(resolvconf)
 
 	if type(rrtype) == str:
 		if 'RR_TYPE_' + rrtype in dir(unbound):
@@ -348,6 +352,7 @@ if __name__ == '__main__':
 	#parser.add_argument('-4', dest='ipv4', action='store_true',help='use ipv4 networking only')
 	#parser.add_argument('-6', dest='ipv6', action='store_true',help='use ipv6 networking only')
 	parser.add_argument('--insecure', action='store_true', default=False, help='Allow use of non-dnssec secured answers')
+	parser.add_argument('--resolvconf', metavar='/PATH/TO/RESOLV.CONF', action='store', default='', help='Use a recursive resolver from resolv.conf')
 	parser.add_argument('-v', '--version', action='version', version='%(prog)s v0.1', help='show version and exit')
 	parser.add_argument('host', metavar="hostname")
 
@@ -371,6 +376,16 @@ if __name__ == '__main__':
 
 	if args.host[-1] != '.':
 		args.host += '.'
+
+	global resolvconf
+	if args.resolvconf:
+		if os.path.isfile(args.resolvconf):
+			resolvconf = args.resolvconf
+		else:
+			print >> sys.stdout, '%s is not a file. Unable to use it as resolv.conf' % args.resolvconf
+			sys.exit(1)
+	else:
+		resolvconf = None
 
 	# not operations are fun!
 	secure = not args.insecure
