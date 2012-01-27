@@ -424,7 +424,7 @@ if __name__ == '__main__':
 				record.isValid(raiseException=True)
 			except RecordValidityException, e:
 				print sys.stderr, 'Error: %s' % str(e)
-				sys.exit(1)
+				continue
 			else:
 				if not args.quiet:
 					print 'This record is valid (well-formed).'
