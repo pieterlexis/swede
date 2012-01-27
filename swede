@@ -588,14 +588,14 @@ if __name__ == '__main__':
 							break
 
 				if cert: # Print the requested records based on the retrieved certificates
-					if args.output == 'b':
+					if args.output == 'both':
 						print genTLSA(args.host, args.protocol, args.port, cert, 'draft', args.usage, args.selector, args.mtype)
 						print genTLSA(args.host, args.protocol, args.port, cert, 'rfc', args.usage, args.selector, args.mtype)
 					else:
 						print genTLSA(args.host, args.protocol, args.port, cert, args.output, args.usage, args.selector, args.mtype)
 
 		else: # Pass the path to the certificate to the genTLSA function
-			if args.output == 'b':
+			if args.output == 'both':
 				print genTLSA(args.host, args.protocol, args.port, args.certificate, 'draft', args.usage, args.selector, args.mtype)
 				print genTLSA(args.host, args.protocol, args.port, args.certificate, 'rfc', args.usage, args.selector, args.mtype)
 			else:
