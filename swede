@@ -423,7 +423,7 @@ if __name__ == '__main__':
 			try:
 				record.isValid(raiseException=True)
 			except RecordValidityException, e:
-				print sys.stderr, 'Error: %s' % str(e)
+				print >> sys.stderr, 'Error: %s' % str(e)
 				continue
 			else:
 				if not args.quiet:
