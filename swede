@@ -469,7 +469,7 @@ if __name__ == '__main__':
 					cert = chain[0]
 					if verifyCertMatch(record, cert):
 						if verify_result == 0: # The cert chains to a valid CA cert according to the system-certificates
-							print 'SUCCES (Usage 1): Certificate offered by the server matches the one mentioned in the TLSA record and chains to a valid CA certificate'
+							print 'SUCCESS (Usage 1): Certificate offered by the server matches the one mentioned in the TLSA record and chains to a valid CA certificate'
 						else:
 							print 'FAIL (Usage 1): Certificate offered by the server matches the one mentioned in the TLSA record but the following error was raised during PKIX validation: %s' % getVerificationErrorReason(verify_result)
 							if pre_exit == 0: pre_exit = 2
@@ -488,7 +488,7 @@ if __name__ == '__main__':
 					if matched:
 						if cert.check_ca():
 							if verify_result == 0:
-								print 'SUCCES (Usage 0): A certificate in the certificate chain offered by the server matches the one mentioned in the TLSA record and is a CA certificate'
+								print 'SUCCESS (Usage 0): A certificate in the certificate chain offered by the server matches the one mentioned in the TLSA record and is a CA certificate'
 							else:
 								print 'FAIL (Usage 0): A certificate in the certificate chain offered by the server matches the one mentioned in the TLSA record and is a CA certificate, but the following error was raised during PKIX validation:' % getVerificationErrorReason(verify_result)
 								if pre_exit == 0: pre_exit = 2
@@ -507,7 +507,7 @@ if __name__ == '__main__':
 							matched = True
 							continue
 					if matched:
-						print 'SUCCES (usage 2): A certificate in the certificate chain (including the end-entity certificate) offered by the server matches the TLSA record'
+						print 'SUCCESS (usage 2): A certificate in the certificate chain (including the end-entity certificate) offered by the server matches the TLSA record'
 						if not args.quiet: print 'The matched certificate has Subject: %s' % cert.get_subject()
 					else:
 						print 'FAIL (usage 2): No certificate in the certificate chain (including the end-entity certificate) offered by the server matches the TLSA record'
