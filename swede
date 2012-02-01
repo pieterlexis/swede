@@ -415,9 +415,9 @@ if __name__ == '__main__':
 			# First, check if the first three fields have correct values.
 			if not args.quiet:
 				print 'Received the following record for name %s:' % record.name
-				print '\tUsage:\t\t\t\t%d (%s)' % (record.usage, {0:'CA Constraint', 1:'End-Entity Constraint', 2:'Trust Anchor'}[record.usage])
-				print '\tSelector:\t\t\t%d (%s)' % (record.selector, {0:'Certificate', 1:'SubjectPublicKeyInfo'}[record.selector])
-				print '\tMatching Type:\t\t\t%d (%s)' % (record.mtype, {0:'Full Certificate', 1:'SHA-256', 2:'SHA-512'}[record.mtype])
+				print '\tUsage:\t\t\t\t%d (%s)' % (record.usage, {0:'CA Constraint', 1:'End-Entity Constraint', 2:'Trust Anchor'}.setdefault(record.usage, 'INVALID'))
+				print '\tSelector:\t\t\t%d (%s)' % (record.selector, {0:'Certificate', 1:'SubjectPublicKeyInfo'}.setdefault(record.usage, 'INVALID'))
+				print '\tMatching Type:\t\t\t%d (%s)' % (record.mtype, {0:'Full Certificate', 1:'SHA-256', 2:'SHA-512'}.setdefault(record.usage, 'INVALID'))
 				print '\tCertificate for Association:\t%s' % record.cert
 
 			try:
