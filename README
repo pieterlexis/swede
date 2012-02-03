@@ -1,4 +1,4 @@
-                          SWEDE - tools to create and verify TLSA (DANE) records
+                         SWEDE - a tool to create and verify TLSA (DANE) records
 ================================================================================
 Swede aims to provide a one-stop solutions to create and test TLSA records.
 
@@ -17,7 +17,7 @@ from squeeze-backports.
 
                                                                         FEATURES
 --------------------------------------------------------------------------------
-- Creation of all 18 permutations of TLSA records
+- Creation of all 24 permutations of TLSA records
 - Output in draft and RFC format
 - Ability to load certificates from disk to create records from
 - Verify TLSA records 'in the field' with the certificates offered by the TLS
@@ -39,7 +39,8 @@ swede verify -p 1516 dane.kiev.practicum.os3.nl
 swede verify ulthar.us
                                                                             TODO
 --------------------------------------------------------------------------------
-- Creation tool that checks the CN in the Subject of the certificate
+- Create and verify should check the CN in the Subject of the certificate
+- The verification for usage 2 is _VERY_ naive
 - IPv6 support (M2Crypto doesnt support it at the moment)
 - Creation tool that does an AXFR for a full zone, collects all hostnames, gets
   the certificates (or the CA certificate from the commandline) and creates all
