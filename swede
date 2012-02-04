@@ -271,7 +271,7 @@ class TLSARecord:
 			if self.getPort() != '*':
 				err.append('Port %s not a number' % self.getPort())
 		if not self.usage in [0,1,2,3]:
-			err.append('Usage: invalid (%s is not one of 0, 1 or 2)' % self.usage)
+			err.append('Usage: invalid (%s is not one of 0, 1, 2 or 3)' % self.usage)
 		if not self.selector in [0,1]:
 			err.append('Selector: invalid (%s is not one of 0 or 1)' % self.selector)
 		if not self.mtype in [0,1,2]:
