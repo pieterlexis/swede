@@ -466,8 +466,7 @@ if __name__ == '__main__':
 
 				# Good, now let's verify
 				if record.usage == 1: # End-host cert
-					cert = chain[0]
-					if verifyCertMatch(record, cert):
+					if verifyCertMatch(record, chain[0]):
 						if verify_result == 0: # The cert chains to a valid CA cert according to the system-certificates
 							print 'SUCCESS (Usage 1): Certificate offered by the server matches the one mentioned in the TLSA record and chains to a valid CA certificate'
 						else:
