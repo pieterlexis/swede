@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# swede - A tool to create DANE/TLSA (draft 15) records.
+# swede - A tool to create DANE/TLSA records.
 # This tool is really simple and not foolproof, it doesn't check the CN in the
 # Subject field of the certificate. It also doesn't check if the supplied
 # certificate is a CA certificate if usage 1 is specified (or any other
