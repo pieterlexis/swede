@@ -170,7 +170,7 @@ def getHash(certificate, mtype):
 def getTLSA(hostname, port=443, protocol='tcp', secure=True):
 	"""
 	This function tries to do a secure lookup of the TLSA record.
-	At the moment it requests the TYPE65468 record and parses it into a 'valid' TLSA record
+	At the moment it requests the TYPE52 record and parses it into a 'valid' TLSA record
 	It returns a list of TLSARecord objects
 	"""
 	if hostname[-1] != '.':
@@ -180,9 +180,9 @@ def getTLSA(hostname, port=443, protocol='tcp', secure=True):
 		raise Exception('Error: unknown protocol: %s. Should be one of tcp, udp or sctp' % protocol)
 	try:
 		if port == '*':
-			records = getRecords('*._%s.%s' % (protocol.lower(), hostname), rrtype=65468, secure=secure)
+			records = getRecords('*._%s.%s' % (protocol.lower(), hostname), rrtype=52, secure=secure)
 		else:
-			records = getRecords('_%s._%s.%s' % (port, protocol.lower(), hostname), rrtype=65468, secure=secure)
+			records = getRecords('_%s._%s.%s' % (port, protocol.lower(), hostname), rrtype=52, secure=secure)
 	except InsecureLookupException, e:
 		print str(e)
 		sys.exit(1)
@@ -242,7 +242,7 @@ class TLSARecord:
 		cert should be a hexidecimal string representing the certificate to be matched field
 		"""
 		try:
-			self.rrtype = 65468 # TLSA provisional
+			self.rrtype = 52    # TLSA per https://www.iana.org/assignments/dns-parameters
 			self.rrclass = 1    # IN
 			self.name = str(name)
 			self.usage = int(usage)
@@ -255,7 +255,7 @@ class TLSARecord:
 	def getRecord(self, draft=False):
 		"""Returns the RR string of this TLSARecord, either in rfc (default) or draft format"""
 		if draft:
-			return '%s IN TYPE65468 \# %s %s%s%s%s' % (self.name, (len(self.cert)/2)+3 , self._toHex(self.usage), self._toHex(self.selector), self._toHex(self.mtype), self.cert)
+			return '%s IN TYPE52 \# %s %s%s%s%s' % (self.name, (len(self.cert)/2)+3 , self._toHex(self.usage), self._toHex(self.selector), self._toHex(self.mtype), self.cert)
 		return '%s IN TLSA %s %s %s %s' % (self.name, self.usage, self.selector, self.mtype, self.cert)
 
 	def _toHex(self, val):
@@ -381,7 +381,7 @@ if __name__ == '__main__':
 	parser_create.add_argument('--port', '-p', action='store', type=int, default=443, help='The port where running TLS is located (default: %(default)s).')
 	parser_create.add_argument('--protocol', action='store', choices=['tcp','udp','sctp'], default='tcp', help='The protocol the TLS service is using (default: %(default)s).')
 	parser_create.add_argument('--certificate', '-c', help='The certificate used for the host. If certificate is empty, the certificate will be downloaded from the server')
-	parser_create.add_argument('--output', '-o', action='store', default='draft', choices=['draft','rfc','both'], help='The type of output. Draft (private RRtype, 65468), RFC (TLSA) or both (default: %(default)s).')
+	parser_create.add_argument('--output', '-o', action='store', default='draft', choices=['draft','rfc','both'], help='The type of output. Draft (private RRtype, 52), RFC (TLSA) or both (default: %(default)s).')
 
 	# Usage of the certificate
 	parser_create.add_argument('--usage', '-u', action='store', type=int, default=1, choices=[0,1,2,3], help='The Usage of the Certificate for Association. \'0\' for CA, \'1\' for End Entity, \'2\' for trust-anchor, \'3\' for ONLY End-Entity match (default: %(default)s).')
