@@ -17,6 +17,7 @@
 
 import sys
 import os
+import socket
 import unbound
 import re
 from M2Crypto import X509, SSL
@@ -441,7 +442,7 @@ if __name__ == '__main__':
 
 			if not args.quiet:
 				print 'Attempting to verify the record with the TLS service...'
-			addresses = getA(args.host, secure=secure)
+			addresses = getA(args.host, secure=secure) + getAAAA(args.host, secure=secure)
 			for address in addresses:
 				if not args.quiet:
 					print 'Got the following IP: %s' % str(address)
@@ -456,7 +457,12 @@ if __name__ == '__main__':
 					sys.exit(1)
 				# Don't error when the verification fails in the SSL handshake
 				ctx.set_verify(SSL.verify_none, depth=9)
-				connection = SSL.Connection(ctx)
+				if isinstance(address, AAAARecord):
+					sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+					sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+				else:
+					sock = None
+				connection = SSL.Connection(ctx, sock=sock)
 				try:
 					connection.connect((str(address), int(args.port)))
 				except SSL.Checker.WrongHost, e:
@@ -565,7 +571,7 @@ if __name__ == '__main__':
 						sys.stdout.write('Port %s not numerical or within correct range (1 <= port <= 65535), try again (hit enter for default 443): ' % user_input)
 			# Get the A records for the host
 			try:
-				addresses = getA(args.host, secure=secure)
+				addresses = getA(args.host, secure=secure) + getAAAA(args.host, secure=secure)
 			except InsecureLookupException, e:
 				print >> sys.stderr, str(e)
 				sys.exit(1)
@@ -575,7 +581,12 @@ if __name__ == '__main__':
 				# We do the certificate handling here, as M2Crypto keeps segfaulting when try to do stuff with the cert if we don't
 				ctx = SSL.Context()
 				ctx.set_verify(SSL.verify_none, depth=9)
-				connection = SSL.Connection(ctx)
+				if isinstance(address, AAAARecord):
+					sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+					sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+				else:
+					sock = None
+				connection = SSL.Connection(ctx, sock=sock)
 				try:
 					connection.connect((str(address), int(connection_port)))
 				except SSL.Checker.WrongHost:
