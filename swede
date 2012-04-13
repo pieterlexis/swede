@@ -25,7 +25,7 @@ from hashlib import sha256, sha512
 from ipaddr import IPv4Address, IPv6Address
 
 
-def genTLSA(hostname, protocol, port, certificate, output='draft', usage=1, selector=0, mtype=1):
+def genTLSA(hostname, protocol, port, certificate, output='generic', usage=1, selector=0, mtype=1):
 	"""This function generates a TLSARecord object using the data passed in the parameters,
 	it then validates the record and returns the RR as a string.
 	"""
@@ -53,8 +53,8 @@ def genTLSA(hostname, protocol, port, certificate, output='draft', usage=1, sele
 
 	record.isValid(raiseException=True)
 
-	if output == 'draft':
-		return record.getRecord(draft=True)
+	if output == 'generic':
+		return record.getRecord(generic=True)
 	return record.getRecord()
 
 def getA(hostname, secure=True):
@@ -252,9 +252,9 @@ class TLSARecord:
 		except:
 			raise Exception('Invalid value passed, unable to create a TLSARecord')
 
-	def getRecord(self, draft=False):
-		"""Returns the RR string of this TLSARecord, either in rfc (default) or draft format"""
-		if draft:
+	def getRecord(self, generic=False):
+		"""Returns the RR string of this TLSARecord, either in rfc (default) or generic format"""
+		if generic:
 			return '%s IN TYPE52 \# %s %s%s%s%s' % (self.name, (len(self.cert)/2)+3 , self._toHex(self.usage), self._toHex(self.selector), self._toHex(self.mtype), self.cert)
 		return '%s IN TLSA %s %s %s %s' % (self.name, self.usage, self.selector, self.mtype, self.cert)
 
@@ -381,7 +381,7 @@ if __name__ == '__main__':
 	parser_create.add_argument('--port', '-p', action='store', type=int, default=443, help='The port where running TLS is located (default: %(default)s).')
 	parser_create.add_argument('--protocol', action='store', choices=['tcp','udp','sctp'], default='tcp', help='The protocol the TLS service is using (default: %(default)s).')
 	parser_create.add_argument('--certificate', '-c', help='The certificate used for the host. If certificate is empty, the certificate will be downloaded from the server')
-	parser_create.add_argument('--output', '-o', action='store', default='draft', choices=['draft','rfc','both'], help='The type of output. Draft (private RRtype, 52), RFC (TLSA) or both (default: %(default)s).')
+	parser_create.add_argument('--output', '-o', action='store', default='generic', choices=['generic','rfc','both'], help='The type of output. Generic (RFC 3597, TYPE52), RFC (TLSA) or both (default: %(default)s).')
 
 	# Usage of the certificate
 	parser_create.add_argument('--usage', '-u', action='store', type=int, default=1, choices=[0,1,2,3], help='The Usage of the Certificate for Association. \'0\' for CA, \'1\' for End Entity, \'2\' for trust-anchor, \'3\' for ONLY End-Entity match (default: %(default)s).')
