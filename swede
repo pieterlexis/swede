@@ -333,6 +333,7 @@ class AAAARecord:
 	"""An object representing an AAAA Record (IPv6 address)"""
 	def __init__(self, hostname, address):
 		self.rrtype = 28
+		self.hostname = hostname
 		self.address = address
 
 	def __str__(self):
@@ -358,7 +359,7 @@ class DNSLookupError(Exception):
 if __name__ == '__main__':
 	import argparse
 	# create the parser
-	parser = argparse.ArgumentParser(description='Create and verify DANE records.', epilog='This tool has a few limitations: it only IPv4 for SSL connections.')
+	parser = argparse.ArgumentParser(description='Create and verify DANE records.', epilog='This tool has a few limitations')
 
 	subparsers = parser.add_subparsers(title='Functions', help='Available functions, see %(prog)s function -h for function-specific help')
 	parser_verify = subparsers.add_parser('verify', help='Verify a TLSA record, exit 0 when all TLSA records are matched, exit 2 when a record does not match the received certificate, exit 1 on error.', epilog='Caveat: For TLSA validation, this program chases through the certificate chain offered by the server, not its local certificates.')
@@ -468,6 +469,9 @@ if __name__ == '__main__':
 				except SSL.Checker.WrongHost, e:
 					# The name on the remote cert doesn't match the hostname because we connect on IP, not hostname (as we want secure lookup)
 					pass
+				except socket.error, e:
+					print 'Cannot connect to %s: %s' % (address, str(e))
+					continue
 				chain = connection.get_peer_cert_chain()
 				verify_result = connection.get_verify_result()
 
@@ -569,7 +573,7 @@ if __name__ == '__main__':
 							input_ok = True
 					except:
 						sys.stdout.write('Port %s not numerical or within correct range (1 <= port <= 65535), try again (hit enter for default 443): ' % user_input)
-			# Get the A records for the host
+			# Get the address records for the host
 			try:
 				addresses = getA(args.host, secure=secure) + getAAAA(args.host, secure=secure)
 			except InsecureLookupException, e:
@@ -591,6 +595,9 @@ if __name__ == '__main__':
 					connection.connect((str(address), int(connection_port)))
 				except SSL.Checker.WrongHost:
 					pass
+				except socket.error, e:
+					print 'Cannot connect to %s: %s' % (address, str(e))
+					continue
 
 				chain = connection.get_peer_cert_chain()
 				for chaincert in chain:
