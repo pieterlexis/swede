@@ -234,6 +234,28 @@ def verifyCertMatch(record, cert):
 	else:
 		return False
 
+def verifyCertNameWithHostName(cert, hostname, with_msg=False):
+	"""Verify the name on the certificate with a hostname, we need this because we get the cert based on IP address and thusly cannot rely on M2Crypto to verify this"""
+	if not isinstance(cert, X509.X509):
+		return
+	if not isinstance(hostname, str):
+		return
+
+	if hostname[-1] == '.':
+		hostname = hostname[0:-1]
+
+	# Ugly string comparison to see if the name on the ee-cert matches with the name provided on the commandline
+	try:
+		altnames_on_cert = cert.get_ext('subjectAltName').get_value()
+	except:
+		altnames_on_cert = ''
+	if hostname in (str(cert.get_subject()) + altnames_on_cert):
+		return True
+	else:
+		if with_msg:
+			print 'WARNING: Name on the certificate (Subject: %s, SubjectAltName: %s) doesn\'t match requested hostname (%s).' % (str(cert.get_subject()), altnames_on_cert, hostname)
+		return False
+
 class TLSARecord:
 	"""When instanciated, this class contains all the fields of a TLSA record.
 	"""
@@ -476,6 +498,10 @@ if __name__ == '__main__':
 				verify_result = connection.get_verify_result()
 
 				# Good, now let's verify
+				if not verifyCertNameWithHostName(cert=chain[0], hostname=str(args.host), with_msg=True):
+					# The name on the cert doesn't match the hostname... we don't verify the TLSA record
+					print 'Not checking the TLSA record.'
+					continue
 				if record.usage == 1: # End-host cert
 					cert = chain[0]
 					if verifyCertMatch(record, cert):
