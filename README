@@ -18,7 +18,7 @@ from squeeze-backports.
                                                                         FEATURES
 --------------------------------------------------------------------------------
 - Creation of all 24 permutations of TLSA records
-- Output in draft and RFC format
+- Output in generic and RFC format
 - Ability to load certificates from disk to create records from
 - Verify TLSA records 'in the field' with the certificates offered by the TLS
   service running on the server
@@ -41,7 +41,6 @@ swede verify ulthar.us
 --------------------------------------------------------------------------------
 - Create and verify should check the CN in the Subject of the certificate
 - The verification for usage 2 is _VERY_ naive
-- IPv6 support (M2Crypto doesnt support it at the moment)
 - Creation tool that does an AXFR for a full zone, collects all hostnames, gets
   the certificates (or the CA certificate from the commandline) and creates all
   TLSA records.
