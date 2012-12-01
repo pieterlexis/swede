@@ -617,6 +617,14 @@ if __name__ == '__main__':
 				else:
 					sock = None
 				connection = SSL.Connection(ctx, sock=sock)
+				
+				# Try to use SNI for virtual hosts if available
+				try:
+					# We don't want the trailing dot here
+					connection.set_tlsext_host_name(args.host[:-1])
+				except AttributeError:
+					print 'M2Crypto does not support SNI: services using virtual-hosting will show the wrong certificate!'
+				
 				try:
 					connection.connect((str(address), int(connection_port)))
 				except SSL.Checker.WrongHost:
