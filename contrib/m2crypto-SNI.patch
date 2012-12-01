@@ -1,0 +1,35 @@
+Index: SWIG/_ssl.i
+===================================================================
+--- SWIG/_ssl.i	(revision 739)
++++ SWIG/_ssl.i	(working copy)
+@@ -14,6 +14,7 @@
+ #include <openssl/bio.h>
+ #include <openssl/dh.h>
+ #include <openssl/ssl.h>
++#include <openssl/tls1.h>
+ #include <openssl/x509.h>
+ %}
+ 
+@@ -375,6 +376,10 @@
+     return SSL_get_mode(ssl);
+ }
+ 
++long ssl_set_tlsext_host_name(SSL *ssl, const char *name) {
++    return SSL_set_tlsext_host_name(ssl, name);
++}
++
+ void ssl_set_client_CA_list_from_file(SSL *ssl, const char *ca_file) {
+     SSL_set_client_CA_list(ssl, SSL_load_client_CA_file(ca_file));
+ }
+Index: M2Crypto/SSL/Connection.py
+===================================================================
+--- M2Crypto/SSL/Connection.py	(revision 739)
++++ M2Crypto/SSL/Connection.py	(working copy)
+@@ -359,3 +359,7 @@
+ 
+     def set_post_connection_check_callback(self, postConnectionCheck):
+         self.postConnectionCheck = postConnectionCheck
++
++    def set_tlsext_host_name(self, name):
++        "Set the requested hostname for the SNI (Server Name Indication) extension"
++        m2.ssl_set_tlsext_host_name(self.ssl, name)
