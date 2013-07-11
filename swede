@@ -253,12 +253,21 @@ def verifyCertNameWithHostName(cert, hostname, with_msg=False):
 		altnames_on_cert = cert.get_ext('subjectAltName').get_value()
 	except:
 		altnames_on_cert = ''
-	if hostname in (str(cert.get_subject()) + altnames_on_cert):
-		return True
-	else:
-		if with_msg:
-			print 'WARNING: Name on the certificate (Subject: %s, SubjectAltName: %s) doesn\'t match requested hostname (%s).' % (str(cert.get_subject()), altnames_on_cert, hostname)
-		return False
+
+	# Build a list containing the CN and all the SANs
+	dns_names = [ str(cert.get_subject().commonName) ]
+	p = re.compile(r'DNS:([^,]+),?')
+	for dns_name in p.findall(altnames_on_cert):
+		dns_names.append(p.sub(r'\1', dns_name))
+
+	# Compare the CN/SANs list with the hostname with wildcard matching
+	for dns_name in dns_names:
+		if re.match('^' + dns_name.replace('*', '\\w[\w\d-]*').replace('.','\.') + '$', hostname):
+			return True
+
+	if with_msg:
+		print 'WARNING: Name on the certificate (Subject: %s, SubjectAltName: %s) doesn\'t match requested hostname (%s).' % (cert.get_subject(), altnames_on_cert, hostname)
+	return False
 
 class TLSARecord:
 	"""When instanciated, this class contains all the fields of a TLSA record.
