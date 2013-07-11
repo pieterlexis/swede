@@ -131,7 +131,7 @@ def getRecords(hostname, rrtype='A', secure=True):
 	ctx.add_ta_file('root.key')
 	ctx.set_option("dlv-anchor-file:", "dlv.isc.org.key")
 	# Use the local cache
-	if resolvconf and os.path.isfile(resolvconf):
+	if resolvconf:
 		ctx.resolvconf(resolvconf)
 	# Use an optional trust-anchor file
 	if trust_anchor_file:
