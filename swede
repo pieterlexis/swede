@@ -126,12 +126,16 @@ def getVerificationErrorReason(num):
 def getRecords(hostname, rrtype='A', secure=True):
 	"""Do a lookup of a name and a rrtype, returns a list of binary coded strings. Only queries for rr_class IN."""
 	global resolvconf
+	global trust_anchor_file
 	ctx = unbound.ub_ctx()
 	ctx.add_ta_file('root.key')
 	ctx.set_option("dlv-anchor-file:", "dlv.isc.org.key")
 	# Use the local cache
 	if resolvconf and os.path.isfile(resolvconf):
 		ctx.resolvconf(resolvconf)
+	# Use an optional trust-anchor file
+	if trust_anchor_file:
+		ctx.set_option("trust-anchor-file:", trust_anchor_file)
 
 	if type(rrtype) == str:
 		if 'RR_TYPE_' + rrtype in dir(unbound):
@@ -393,6 +397,7 @@ if __name__ == '__main__':
 	#parser.add_argument('-6', dest='ipv6', action='store_true',help='use ipv6 networking only')
 	parser.add_argument('--insecure', action='store_true', default=False, help='Allow use of non-dnssec secured answers')
 	parser.add_argument('--resolvconf', metavar='/PATH/TO/RESOLV.CONF', action='store', default='', help='Use a recursive resolver from resolv.conf')
+	parser.add_argument('--trust-anchor-file', metavar='/PATH/TO/TRUST-ANCHOR.KEY', action='store', default='', help='Path to a file containing additional trust anchor(s) for validation')
 	parser.add_argument('-v', '--version', action='version', version='%(prog)s v0.2', help='show version and exit')
 	parser.add_argument('host', metavar="hostname")
 
@@ -426,6 +431,16 @@ if __name__ == '__main__':
 			sys.exit(1)
 	else:
 		resolvconf = None
+
+	global trust_anchor_file
+	if args.trust_anchor_file:
+		if os.path.isfile(args.trust_anchor_file):
+			trust_anchor_file = args.trust_anchor_file
+		else:
+			print >> sys.stdout, '%s is not a file. Unable to use it as trust anchor file' % args.trust_anchor_file
+			sys.exit(1)
+	else:
+		trust_anchor_file = None
 
 	# not operations are fun!
 	secure = not args.insecure
