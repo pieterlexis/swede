@@ -146,7 +146,9 @@ def getRecords(hostname, rrtype='A', secure=True):
 		raise Exception('Error: rrtype in wrong format, neither int nor str.')
 
 	status, result = ctx.resolve(hostname, rrtype=rrtype)
-	if status == 0 and result.havedata:
+	if status == 0:
+		if not result.havedata:
+			return []
 		if not result.secure:
 			if secure:
 				# The data is insecure and a secure lookup was requested
