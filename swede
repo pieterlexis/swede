@@ -546,7 +546,7 @@ if __name__ == '__main__':
 							if pre_exit == 0: pre_exit = 2
 						if not args.quiet: print 'The matched certificate has Subject: %s' % cert.get_subject()
 					else:
-						print 'FAIL: Certificate offered by the server does not match the TLSA record'
+						print 'FAIL (Usage 1): Certificate offered by the server does not match the TLSA record'
 						if pre_exit == 0: pre_exit = 2
 
 				elif record.usage == 0: # CA constraint
@@ -579,25 +579,25 @@ if __name__ == '__main__':
 					for cert in chain:
 						if previous_issuer:
 							if not str(previous_issuer) == str(cert.get_subject()): # The chain cannot be valid
-								print "FAIL: Certificates don't chain"
+								print "FAIL (Usage 2): Certificates don't chain"
 								break
 							previous_issuer = cert.get_issuer()
 						if verifyCertMatch(record, cert):
 							matched = True
 							continue
 					if matched:
-						print 'SUCCESS (usage 2): A certificate in the certificate chain (including the end-entity certificate) offered by the server matches the TLSA record'
+						print 'SUCCESS (Usage 2): A certificate in the certificate chain (including the end-entity certificate) offered by the server matches the TLSA record'
 						if not args.quiet: print 'The matched certificate has Subject: %s' % cert.get_subject()
 					else:
-						print 'FAIL (usage 2): No certificate in the certificate chain (including the end-entity certificate) offered by the server matches the TLSA record'
+						print 'FAIL (Usage 2): No certificate in the certificate chain (including the end-entity certificate) offered by the server matches the TLSA record'
 						if pre_exit == 0: pre_exit = 2
 
 				elif record.usage == 3: # EE cert MUST match
 					if verifyCertMatch(record,chain[0]):
-						print 'SUCCESS (usage 3): The certificate offered by the server matches the TLSA record'
+						print 'SUCCESS (Usage 3): The certificate offered by the server matches the TLSA record'
 						if not args.quiet: print 'The matched certificate has Subject: %s' % chain[0].get_subject()
 					else:
-						print 'FAIL (usage 3): The certificate offered by the server does not match the TLSA record'
+						print 'FAIL (Usage 3): The certificate offered by the server does not match the TLSA record'
 						if pre_exit == 0: pre_exit = 2
 
 				# Cleanup, just in case
