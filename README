@@ -2,6 +2,8 @@
 ================================================================================
 Swede aims to provide a one-stop solutions to create and test TLSA records.
 
+Swede is created as a proof of concept tool.
+
                                                                          LICENSE
 --------------------------------------------------------------------------------
 swede is copyright Pieter Lexis <pieter.lexis@os3.nl> and is licensed under the
@@ -55,3 +57,5 @@ swede verify ulthar.us
 - No support for SRV record indirection (see Issue 28 of the DANE-WG)
 - No support for TLS/SSL over UDP or SCTP
 - No support for STARTTLS type protocols (only 'straight' SSL/TLS conections)
+- Important certificate validation bugs are mentioned in the issue tracker:
+  https://github.com/pieterlexis/swede/issues
