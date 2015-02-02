@@ -515,8 +515,9 @@ if __name__ == '__main__':
 
 				# Try to use SNI for virtual hosts if available
 				try:
-					# We don't want the trailing dot here
-					connection.set_tlsext_host_name(args.host[:-1])
+					if record.usage != 3:
+						# We don't want the trailing dot here
+						connection.set_tlsext_host_name(args.host[:-1])
 				except AttributeError:
 					if not args.quiet: print >> sys.stderr, 'M2Crypto does not support SNI: services using virtual-hosting will show the wrong certificate!'
 
@@ -532,7 +533,7 @@ if __name__ == '__main__':
 				verify_result = connection.get_verify_result()
 
 				# Good, now let's verify
-				if not verifyCertNameWithHostName(cert=chain[0], hostname=str(args.host), with_msg=True):
+				if record.usage != 3 and not verifyCertNameWithHostName(cert=chain[0], hostname=str(args.host), with_msg=True):
 					# The name on the cert doesn't match the hostname... we don't verify the TLSA record
 					print 'Not checking the TLSA record.'
 					continue
@@ -654,8 +655,9 @@ if __name__ == '__main__':
 				
 				# Try to use SNI for virtual hosts if available
 				try:
-					# We don't want the trailing dot here
-					connection.set_tlsext_host_name(args.host[:-1])
+					if record.usage != 3:
+						# We don't want the trailing dot here
+						connection.set_tlsext_host_name(args.host[:-1])
 				except AttributeError:
 					if not args.quiet: print >> sys.stderr, 'M2Crypto does not support SNI: services using virtual-hosting will show the wrong certificate!'
 				
