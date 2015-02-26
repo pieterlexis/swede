@@ -16,3 +16,8 @@ library called `swede` and several tools. Planned tools for now are:
  * as-yet unnamed tool for DANE with OpenPGP
 
 SwedeNG will be versioned according to [semantic versioning](http://semver.org).
+
+Testing
+-------
+
+SwedeNG aims to have both unit-tests and functional tests.
