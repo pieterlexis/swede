@@ -410,13 +410,13 @@ if __name__ == '__main__':
 	parser.add_argument('--resolvconf', metavar='/PATH/TO/RESOLV.CONF', action='store', default='', help='Use a recursive resolver from resolv.conf')
 	parser.add_argument('--trust-anchor-file', metavar='/PATH/TO/TRUST-ANCHOR.KEY', action='store', default='', help='Path to a file containing additional trust anchor(s) for validation')
 	parser.add_argument('-v', '--version', action='version', version='%(prog)s v0.2', help='show version and exit')
+	parser.add_argument('--quiet', '-q', action='store_true', help='Only print the result of the creation / validation')
 	parser.add_argument('host', metavar="hostname")
 
 	parser_verify.add_argument('--port', '-p', action='store', default='443', help='The port, or \'*\' where running TLS is located (default: %(default)s).')
 	parser_verify.add_argument('--protocol', action='store', choices=['tcp','udp','sctp'], default='tcp', help='The protocol the TLS service is using (default: %(default)s).')
 	parser_verify.add_argument('--only-rr', '-o', action='store_true', help='Only verify that the TLSA resource record is correct (do not check certificate)')
 	parser_verify.add_argument('--ca-cert', metavar='/PATH/TO/CERTSTORE', action='store', default = '/etc/ssl/certs/', help='Path to a CA certificate or a directory containing the certificates (default: %(default)s)')
-	parser_verify.add_argument('--quiet', '-q', action='store_true', help='Only print the result of the validation')
 
 	parser_create.add_argument('--port', '-p', action='store', type=int, default=443, help='The port where running TLS is located (default: %(default)s).')
 	parser_create.add_argument('--protocol', action='store', choices=['tcp','udp','sctp'], default='tcp', help='The protocol the TLS service is using (default: %(default)s).')
@@ -655,7 +655,7 @@ if __name__ == '__main__':
 				
 				# Try to use SNI for virtual hosts if available
 				try:
-					if record.usage != 3:
+					if args.usage != 3:
 						# We don't want the trailing dot here
 						connection.set_tlsext_host_name(args.host[:-1])
 				except AttributeError:
