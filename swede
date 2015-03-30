@@ -18,6 +18,9 @@
 import sys
 import os
 import socket
+import smtplib
+import imaplib
+import poplib
 import unbound
 import re
 from M2Crypto import X509, SSL
@@ -393,6 +396,115 @@ class InsecureLookupException(Exception):
 class DNSLookupError(Exception):
 	pass
 
+class StartTLSConnection(SSL.Connection):
+	"""Subclass allowing to issue StartTLS command before establishing TLS connection"""
+
+	def connect(self, addr, starttls='none'):
+		self.socket.connect(addr)
+		self.addr = addr
+		if starttls == "smtp":
+			self.starttls_smtp()
+		elif starttls == "imap":
+			self.starttls_imap()
+		elif starttls == "pop3":
+			self.starttls_pop3()
+		elif starttls != "none":
+			raise SSL.Checker.SSLVerificationError, 'StartTLS not supported for given protocol'
+		self.setup_ssl()
+		self.set_connect_state()
+		ret = self.connect_ssl()
+		check = getattr(self, 'postConnectionCheck', self.clientPostConnectionCheck)
+		if check is not None:
+			if not check(self.get_peer_cert(), self.addr[0]):
+				raise SSL.Checker.SSLVerificationError, 'post connection check failed'
+		return ret
+
+	def starttls_smtp(self):
+		socket = self.socket
+		class MySMTP(smtplib.SMTP):
+			def _get_socket(self, host, port, timeout):
+				return socket
+		smtp = MySMTP()
+		smtp.connect()
+		smtp.ehlo_or_helo_if_needed()
+		if not smtp.has_extn("starttls"):
+			raise smtplib.SMTPException("STARTTLS extension not supported by server.")
+		(resp, reply) = smtp.docmd("STARTTLS")
+		if resp != 220:
+			raise smtplib.SMTPException("STARTTLS command failed.")
+
+	def starttls_imap(self):
+		# StartTLS command is not supported until Python 3.2
+		imaplib.Commands['STARTTLS'] = ('NONAUTH',)
+		socket = self.socket
+
+		class MyIMAP(imaplib.IMAP4):
+			def open(self, host, port):
+				self.host = host
+				self.port = port
+				self.sock = socket
+				self.file = self.sock.makefile('rb')
+			def starttls(self):
+				name = 'STARTTLS'
+				if name not in self.capabilities:
+					raise self.abort('TLS not supported by server')
+				typ, dat = self._simple_command(name)
+				if typ != 'OK':
+					raise self.error("Couldn't establish TLS session")
+
+		imap = MyIMAP()
+		imap.starttls()
+
+
+	def starttls_pop3(self):
+		# StartTLS command is not supported until Python 3.4
+		socket = self.socket
+
+		class MyPOP3(poplib.POP3):
+			def __init__(self):
+				self.host = ""
+				self.port = 143
+				self.sock = socket
+				self.file = self.sock.makefile('rb')
+				self._debugging = 0
+				self.welcome = self._getresp()
+			def capa(self):
+				"""Return server capabilities (RFC 2449) as a dictionary
+				>>> c=poplib.POP3('localhost')
+				>>> c.capa()
+				{'IMPLEMENTATION': ['Cyrus', 'POP3', 'server', 'v2.2.12'],
+				 'TOP': [], 'LOGIN-DELAY': ['0'], 'AUTH-RESP-CODE': [],
+				 'EXPIRE': ['NEVER'], 'USER': [], 'STLS': [], 'PIPELINING': [],
+				 'UIDL': [], 'RESP-CODES': []}
+				>>>
+
+				Really, according to RFC 2449, the cyrus folks should avoid
+				having the implementation split into multiple arguments...
+				"""
+				def _parsecap(line):
+					lst = line.decode('ascii').split()
+					return lst[0], lst[1:]
+				caps = {}
+				try:
+					resp = self._longcmd('CAPA')
+					rawcaps = resp[1]
+					for capline in rawcaps:
+						capnm, capargs = _parsecap(capline)
+						caps[capnm] = capargs
+				except poplib.error_proto:
+					raise poplib.error_proto('-ERR CAPA not supported by server')
+				return caps
+
+			def stls(self, context=None):
+				caps = self.capa()
+				if not 'STLS' in caps:
+				    raise poplib.error_proto('-ERR STLS not supported by server')
+				resp = self._shortcmd('STLS')
+				return resp
+
+		pop3 = MyPOP3()
+		pop3.stls()
+
 if __name__ == '__main__':
 	import argparse
 	# create the parser
@@ -410,13 +522,14 @@ if __name__ == '__main__':
 	parser.add_argument('--resolvconf', metavar='/PATH/TO/RESOLV.CONF', action='store', default='', help='Use a recursive resolver from resolv.conf')
 	parser.add_argument('--trust-anchor-file', metavar='/PATH/TO/TRUST-ANCHOR.KEY', action='store', default='', help='Path to a file containing additional trust anchor(s) for validation')
 	parser.add_argument('-v', '--version', action='version', version='%(prog)s v0.2', help='show version and exit')
+	parser.add_argument('--quiet', '-q', action='store_true', help='Only print the result of the creation / validation')
 	parser.add_argument('host', metavar="hostname")
 
 	parser_verify.add_argument('--port', '-p', action='store', default='443', help='The port, or \'*\' where running TLS is located (default: %(default)s).')
 	parser_verify.add_argument('--protocol', action='store', choices=['tcp','udp','sctp'], default='tcp', help='The protocol the TLS service is using (default: %(default)s).')
 	parser_verify.add_argument('--only-rr', '-o', action='store_true', help='Only verify that the TLSA resource record is correct (do not check certificate)')
 	parser_verify.add_argument('--ca-cert', metavar='/PATH/TO/CERTSTORE', action='store', default = '/etc/ssl/certs/', help='Path to a CA certificate or a directory containing the certificates (default: %(default)s)')
-	parser_verify.add_argument('--quiet', '-q', action='store_true', help='Only print the result of the validation')
+	parser_verify.add_argument('--starttls', action='store', choices=['none','smtp','imap','pop3'], default='none', help='Issue StartTLS command before TLS handshake (default: %(default)s).')
 
 	parser_create.add_argument('--port', '-p', action='store', type=int, default=443, help='The port where running TLS is located (default: %(default)s).')
 	parser_create.add_argument('--protocol', action='store', choices=['tcp','udp','sctp'], default='tcp', help='The protocol the TLS service is using (default: %(default)s).')
@@ -427,6 +540,7 @@ if __name__ == '__main__':
 	parser_create.add_argument('--usage', '-u', action='store', type=int, default=1, choices=[0,1,2,3], help='The Usage of the Certificate for Association. \'0\' for CA, \'1\' for End Entity, \'2\' for trust-anchor, \'3\' for ONLY End-Entity match (default: %(default)s).')
 	parser_create.add_argument('--selector', '-s', action='store', type=int, default=0, choices=[0,1], help='The Selector for the Certificate for Association. \'0\' for Full Certificate, \'1\' for SubjectPublicKeyInfo (default: %(default)s).')
 	parser_create.add_argument('--mtype', '-m', action='store', type=int, default=1, choices=[0,1,2], help='The Matching Type of the Certificate for Association. \'0\' for Exact match, \'1\' for SHA-256 hash, \'2\' for SHA-512 (default: %(default)s).')
+	parser_create.add_argument('--starttls', action='store', choices=['none','smtp','imap','pop3'], default='none', help='Issue StartTLS command before TLS handshake (default: %(default)s).')
 
 	args = parser.parse_args()
 
@@ -511,7 +625,7 @@ if __name__ == '__main__':
 					sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 				else:
 					sock = None
-				connection = SSL.Connection(ctx, sock=sock)
+				connection = StartTLSConnection(ctx, sock=sock)
 
 				# Try to use SNI for virtual hosts if available
 				try:
@@ -522,7 +636,7 @@ if __name__ == '__main__':
 					if not args.quiet: print >> sys.stderr, 'M2Crypto does not support SNI: services using virtual-hosting will show the wrong certificate!'
 
 				try:
-					connection.connect((str(address), int(args.port)))
+					connection.connect((str(address), int(args.port)), args.starttls)
 				except SSL.Checker.WrongHost, e:
 					# The name on the remote cert doesn't match the hostname because we connect on IP, not hostname (as we want secure lookup)
 					pass
@@ -651,18 +765,18 @@ if __name__ == '__main__':
 					sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 				else:
 					sock = None
-				connection = SSL.Connection(ctx, sock=sock)
+				connection = StartTLSConnection(ctx, sock=sock)
 				
 				# Try to use SNI for virtual hosts if available
 				try:
-					if record.usage != 3:
+					if args.usage != 3:
 						# We don't want the trailing dot here
 						connection.set_tlsext_host_name(args.host[:-1])
 				except AttributeError:
 					if not args.quiet: print >> sys.stderr, 'M2Crypto does not support SNI: services using virtual-hosting will show the wrong certificate!'
 				
 				try:
-					connection.connect((str(address), int(connection_port)))
+					connection.connect((str(address), int(connection_port)), args.starttls)
 				except SSL.Checker.WrongHost:
 					pass
 				except socket.error, e:
