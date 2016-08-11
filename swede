@@ -131,8 +131,8 @@ def getRecords(hostname, rrtype='A', secure=True):
 	global resolvconf
 	global trust_anchor_file
 	ctx = unbound.ub_ctx()
-	ctx.add_ta_file('root.key')
-	ctx.set_option("dlv-anchor-file:", "dlv.isc.org.key")
+	ctx.add_ta_file(os.path.dirname(os.path.realpath(__file__))+'/root.key')
+	ctx.set_option("dlv-anchor-file:", os.path.dirname(os.path.realpath(__file__))+"/dlv.isc.org.key")
 	# Use the local cache
 	if resolvconf:
 		ctx.resolvconf(resolvconf)
