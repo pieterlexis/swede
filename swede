@@ -516,8 +516,8 @@ if __name__ == '__main__':
 	parser_create = subparsers.add_parser('create', help='Create a TLSA record')
 	parser_create.set_defaults(function='create')
 
-	#parser.add_argument('-4', dest='ipv4', action='store_true',help='use ipv4 networking only')
-	#parser.add_argument('-6', dest='ipv6', action='store_true',help='use ipv6 networking only')
+	parser.add_argument('-4', dest='ipv4', action='store_true',help='use ipv4 networking only')
+	parser.add_argument('-6', dest='ipv6', action='store_true',help='use ipv6 networking only')
 	parser.add_argument('--insecure', action='store_true', default=False, help='Allow use of non-dnssec secured answers')
 	parser.add_argument('--resolvconf', metavar='/PATH/TO/RESOLV.CONF', action='store', default='', help='Use a recursive resolver from resolv.conf')
 	parser.add_argument('--trust-anchor-file', metavar='/PATH/TO/TRUST-ANCHOR.KEY', action='store', default='', help='Path to a file containing additional trust anchor(s) for validation')
@@ -605,7 +605,12 @@ if __name__ == '__main__':
 
 			if not args.quiet:
 				print 'Attempting to verify the record with the TLS service...'
-			addresses = getA(args.host, secure=secure) + getAAAA(args.host, secure=secure)
+                        if args.ipv4:
+			    addresses = getA(args.host, secure=secure)
+                        elif args.ipv6:
+			    addresses = getAAAA(args.host, secure=secure)
+                        else:
+			    addresses = getA(args.host, secure=secure) + getAAAA(args.host, secure=secure)
 			for address in addresses:
 				if not args.quiet:
 					print 'Got the following IP: %s' % str(address)
