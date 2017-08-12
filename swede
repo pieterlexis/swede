@@ -634,9 +634,8 @@ if __name__ == '__main__':
 
 				# Try to use SNI for virtual hosts if available
 				try:
-					if record.usage != 3:
-						# We don't want the trailing dot here
-						connection.set_tlsext_host_name(args.host[:-1])
+					# We don't want the trailing dot here
+					connection.set_tlsext_host_name(args.host[:-1])
 				except AttributeError:
 					if not args.quiet: print >> sys.stderr, 'M2Crypto does not support SNI: services using virtual-hosting will show the wrong certificate!'
 
@@ -774,9 +773,8 @@ if __name__ == '__main__':
 				
 				# Try to use SNI for virtual hosts if available
 				try:
-					if args.usage != 3:
-						# We don't want the trailing dot here
-						connection.set_tlsext_host_name(args.host[:-1])
+					# We don't want the trailing dot here
+					connection.set_tlsext_host_name(args.host[:-1])
 				except AttributeError:
 					if not args.quiet: print >> sys.stderr, 'M2Crypto does not support SNI: services using virtual-hosting will show the wrong certificate!'
 				
